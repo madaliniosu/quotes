@@ -8,6 +8,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/netlify": "^7.0.10",
     "@notionhq/client": "^2.2.15",
     "astro": "^6.3.4"
   }

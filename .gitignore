@@ -24,3 +24,6 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sln
+
+# Local Netlify folder
+.netlify
