@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@notionhq/client": "^2.2.15",
-    "astro": "^4.16.18"
+    "astro": "^6.3.4"
   }
 }
