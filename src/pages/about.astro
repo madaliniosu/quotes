@@ -1,0 +1,64 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+---
+
+<Layout title="About — Quotes">
+  <Nav active="about" />
+  <main>
+    <h1>About</h1>
+    <div class="content">
+      <p>
+        A personal collection of quotes that shaped how I see the world.
+        Words from writers, thinkers, and moments worth remembering.
+      </p>
+      <p>
+        Use the arrow keys or the navigation below a quote to move through
+        the collection, or browse the <a href="/timeline">timeline</a> to see
+        when each quote was added.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+    width: 100%;
+  }
+
+  h1 {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: 2.5rem;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  p {
+    font-family: var(--font-quote);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-text);
+  }
+
+  a {
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    transition: border-color 0.15s;
+  }
+
+  a:hover {
+    border-color: var(--color-text);
+  }
+</style>

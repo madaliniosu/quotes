@@ -1,0 +1,95 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import QuoteDisplay from '../components/QuoteDisplay.astro';
+import QuoteNav from '../components/QuoteNav.astro';
+import { getQuotes } from '../lib/notion';
+
+const quotes = await getQuotes();
+const first = quotes[0];
+---
+
+<Layout title="Quotes">
+  <Nav active="home" />
+  {quotes.length === 0 ? (
+    <p class="empty">No quotes yet.</p>
+  ) : (
+    <>
+      <QuoteDisplay quote={first} />
+      <QuoteNav />
+    </>
+  )}
+</Layout>
+
+<script define:vars={{ quotes }}>
+  function formatMonthYear(dateStr) {
+    if (!dateStr) return '';
+    const [year, month] = dateStr.split('-');
+    const d = new Date(Number(year), Number(month) - 1);
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  function getIndexFromHash() {
+    const hash = window.location.hash.slice(1);
+    const n = parseInt(hash, 10);
+    return Number.isFinite(n) && n >= 0 && n < quotes.length ? n : 0;
+  }
+
+  function showQuote(index) {
+    const q = quotes[index];
+    document.getElementById('quote-text').textContent = q.text;
+    document.getElementById('quote-author').textContent = q.author;
+    const dateEl = document.getElementById('quote-date');
+    if (dateEl) dateEl.textContent = formatMonthYear(q.date);
+    document.getElementById('quote-display').dataset.index = String(index);
+    window.location.replace('#' + index);
+  }
+
+  let current = getIndexFromHash();
+  // Sync display to hash on load (in case URL was shared)
+  if (current !== 0) showQuote(current);
+
+  document.getElementById('btn-prev').addEventListener('click', () => {
+    current = (current - 1 + quotes.length) % quotes.length;
+    showQuote(current);
+  });
+
+  document.getElementById('btn-next').addEventListener('click', () => {
+    current = (current + 1) % quotes.length;
+    showQuote(current);
+  });
+
+  document.getElementById('btn-random').addEventListener('click', () => {
+    let next;
+    do { next = Math.floor(Math.random() * quotes.length); } while (next === current && quotes.length > 1);
+    current = next;
+    showQuote(current);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+    if (e.key === 'ArrowLeft') {
+      current = (current - 1 + quotes.length) % quotes.length;
+      showQuote(current);
+    } else if (e.key === 'ArrowRight') {
+      current = (current + 1) % quotes.length;
+      showQuote(current);
+    } else if (e.key === 'r' || e.key === 'R') {
+      let next;
+      do { next = Math.floor(Math.random() * quotes.length); } while (next === current && quotes.length > 1);
+      current = next;
+      showQuote(current);
+    }
+  });
+</script>
+
+<style>
+  .empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted);
+    font-family: var(--font-ui);
+  }
+</style>

@@ -1,0 +1,128 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import { getQuotes } from '../lib/notion';
+
+const quotes = await getQuotes();
+
+// Group quotes by YYYY-MM
+const grouped = new Map<string, typeof quotes>();
+for (const q of quotes) {
+  const key = q.date || 'Undated';
+  if (!grouped.has(key)) grouped.set(key, []);
+  grouped.get(key)!.push(q);
+}
+
+function formatMonthYear(dateStr: string): string {
+  if (dateStr === 'Undated') return 'Undated';
+  const [year, month] = dateStr.split('-');
+  const d = new Date(Number(year), Number(month) - 1);
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+// Build flat index map so timeline links go to /#<index>
+const indexMap = new Map(quotes.map((q, i) => [q.id, i]));
+---
+
+<Layout title="Timeline — Quotes">
+  <Nav active="timeline" />
+  <main>
+    <h1>Timeline</h1>
+    {quotes.length === 0 ? (
+      <p class="empty">No quotes yet.</p>
+    ) : (
+      [...grouped.entries()].map(([key, qs]) => (
+        <section>
+          <h2>{formatMonthYear(key)}</h2>
+          <ul>
+            {qs.map((q) => (
+              <li>
+                <a href={`/#${indexMap.get(q.id)}`}>
+                  <span class="text">&#8220;{q.text}&#8221;</span>
+                  <span class="author">— {q.author}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    )}
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+    width: 100%;
+  }
+
+  h1 {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: 3rem;
+  }
+
+  section {
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-family: var(--font-ui);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  li a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+    transition: opacity 0.15s;
+  }
+
+  li:last-child a {
+    border-bottom: none;
+  }
+
+  li a:hover {
+    opacity: 0.65;
+  }
+
+  .text {
+    font-family: var(--font-quote);
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--color-text);
+    line-height: 1.55;
+  }
+
+  .author {
+    font-family: var(--font-ui);
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+
+  .empty {
+    color: var(--color-muted);
+    font-family: var(--font-ui);
+  }
+</style>

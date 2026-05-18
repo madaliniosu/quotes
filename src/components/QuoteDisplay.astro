@@ -1,0 +1,99 @@
+---
+import type { Quote } from '../lib/notion';
+
+interface Props {
+  quote: Quote;
+}
+const { quote } = Astro.props;
+
+function formatMonthYear(dateStr: string): string {
+  if (!dateStr) return '';
+  const [year, month] = dateStr.split('-');
+  const d = new Date(Number(year), Number(month) - 1);
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+---
+
+<figure id="quote-display" data-index="0">
+  <blockquote>
+    <span class="open-mark">&ldquo;</span>
+    <p id="quote-text">{quote.text}</p>
+    <span class="close-mark">&rdquo;</span>
+  </blockquote>
+  <figcaption>
+    <span id="quote-author">{quote.author}</span>
+    {quote.date && <span id="quote-date">{formatMonthYear(quote.date)}</span>}
+  </figcaption>
+</figure>
+
+<style>
+  figure {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+    text-align: center;
+  }
+
+  blockquote {
+    position: relative;
+  }
+
+  .open-mark {
+    display: block;
+    font-family: var(--font-quote);
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--color-border);
+    margin-bottom: -1rem;
+    user-select: none;
+  }
+
+  .close-mark {
+    display: none;
+  }
+
+  p {
+    font-family: var(--font-quote);
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    line-height: 1.65;
+    color: var(--color-text);
+    font-style: italic;
+  }
+
+  figcaption {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  figcaption::before {
+    content: '';
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background: var(--color-border);
+    margin-bottom: 0.75rem;
+  }
+
+  #quote-author {
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-accent);
+    letter-spacing: 0.02em;
+  }
+
+  #quote-date {
+    font-family: var(--font-ui);
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+</style>
