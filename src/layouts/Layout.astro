@@ -1,8 +1,15 @@
 ---
 interface Props {
   title?: string;
+  description?: string;
 }
-const { title = 'Quotes' } = Astro.props;
+const {
+  title = 'Quotes',
+  description = 'A personal collection of quotes that shaped how I see the world.',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+const fontURL = 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap';
 ---
 
 <!doctype html>
@@ -11,12 +18,23 @@ const { title = 'Quotes' } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+
+    <!-- Non-blocking Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preload" as="style" href={fontURL} />
+    <Fragment set:html={`<link rel="stylesheet" href="${fontURL}" media="print" onload="this.media='all'">`} />
+    <noscript><link rel="stylesheet" href={fontURL} /></noscript>
   </head>
   <body>
     <slot />

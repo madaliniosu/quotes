@@ -1,9 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
-import { getQuotes } from '../lib/notion';
+import { getQuotes, formatMonthYear } from '../lib/notion';
+import type { Quote } from '../lib/notion';
 
-const quotes = await getQuotes();
+let quotes: Quote[] = [];
+let fetchError = false;
+try {
+  quotes = await getQuotes();
+} catch (e) {
+  fetchError = true;
+  console.error('Failed to fetch quotes from Notion:', e);
+}
 
 // Group quotes by YYYY-MM
 const grouped = new Map<string, typeof quotes>();
@@ -13,12 +21,12 @@ for (const q of quotes) {
   grouped.get(key)!.push(q);
 }
 
-function formatMonthYear(dateStr: string): string {
-  if (dateStr === 'Undated') return 'Undated';
-  const [year, month] = dateStr.split('-');
-  const d = new Date(Number(year), Number(month) - 1);
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-}
+// Sort groups descending by date; push "Undated" to the end
+const sortedGroups = [...grouped.entries()].sort(([a], [b]) => {
+  if (a === 'Undated') return 1;
+  if (b === 'Undated') return -1;
+  return b.localeCompare(a);
+});
 
 // Build flat index map so timeline links go to /#<index>
 const indexMap = new Map(quotes.map((q, i) => [q.id, i]));
@@ -28,10 +36,12 @@ const indexMap = new Map(quotes.map((q, i) => [q.id, i]));
   <Nav active="timeline" />
   <main>
     <h1>Timeline</h1>
-    {quotes.length === 0 ? (
-      <p class="empty">No quotes yet.</p>
+    {fetchError ? (
+      <p class="status-msg">Unable to load quotes right now. Please try again later.</p>
+    ) : quotes.length === 0 ? (
+      <p class="status-msg">No quotes yet.</p>
     ) : (
-      [...grouped.entries()].map(([key, qs]) => (
+      sortedGroups.map(([key, qs]) => (
         <section>
           <h2>{formatMonthYear(key)}</h2>
           <ul>
@@ -99,6 +109,12 @@ const indexMap = new Map(quotes.map((q, i) => [q.id, i]));
     transition: opacity 0.15s;
   }
 
+  li a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
   li:last-child a {
     border-bottom: none;
   }
@@ -121,7 +137,7 @@ const indexMap = new Map(quotes.map((q, i) => [q.id, i]));
     color: var(--color-muted);
   }
 
-  .empty {
+  .status-msg {
     color: var(--color-muted);
     font-family: var(--font-ui);
   }

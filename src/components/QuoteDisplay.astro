@@ -5,24 +5,18 @@ interface Props {
   quote: Quote;
 }
 const { quote } = Astro.props;
-
-function formatMonthYear(dateStr: string): string {
-  if (!dateStr) return '';
-  const [year, month] = dateStr.split('-');
-  const d = new Date(Number(year), Number(month) - 1);
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-}
 ---
 
 <figure id="quote-display" data-index="0">
   <blockquote>
     <span class="open-mark">&ldquo;</span>
     <p id="quote-text">{quote.text}</p>
-    <span class="close-mark">&rdquo;</span>
   </blockquote>
   <figcaption>
     <span id="quote-author">{quote.author}</span>
-    {quote.date && <span id="quote-date">{formatMonthYear(quote.date)}</span>}
+    <span id="quote-date" style={quote.dateFormatted ? undefined : 'display:none'}>
+      {quote.dateFormatted}
+    </span>
   </figcaption>
 </figure>
 
@@ -52,10 +46,6 @@ function formatMonthYear(dateStr: string): string {
     color: var(--color-border);
     margin-bottom: -1rem;
     user-select: none;
-  }
-
-  .close-mark {
-    display: none;
   }
 
   p {

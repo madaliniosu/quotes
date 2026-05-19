@@ -6,10 +6,18 @@ const { active } = Astro.props;
 ---
 
 <nav>
-  <a href="/" class="site-name">Quotes</a>
+  <a href="/" class="site-name" aria-current={active === 'home' ? 'page' : undefined}>Quotes</a>
   <div class="links">
-    <a href="/timeline" class:list={[{ active: active === 'timeline' }]}>Timeline</a>
-    <a href="/about" class:list={[{ active: active === 'about' }]}>About</a>
+    <a
+      href="/timeline"
+      class:list={[{ active: active === 'timeline' }]}
+      aria-current={active === 'timeline' ? 'page' : undefined}
+    >Timeline</a>
+    <a
+      href="/about"
+      class:list={[{ active: active === 'about' }]}
+      aria-current={active === 'about' ? 'page' : undefined}
+    >About</a>
   </div>
 </nav>
 
@@ -46,5 +54,11 @@ const { active } = Astro.props;
   .links a:hover,
   .links a.active {
     color: var(--color-text);
+  }
+
+  .links a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
   }
 </style>

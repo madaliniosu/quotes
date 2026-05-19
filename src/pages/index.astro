@@ -4,15 +4,26 @@ import Nav from '../components/Nav.astro';
 import QuoteDisplay from '../components/QuoteDisplay.astro';
 import QuoteNav from '../components/QuoteNav.astro';
 import { getQuotes } from '../lib/notion';
+import type { Quote } from '../lib/notion';
 
-const quotes = await getQuotes();
+let quotes: Quote[] = [];
+let fetchError = false;
+try {
+  quotes = await getQuotes();
+} catch (e) {
+  fetchError = true;
+  console.error('Failed to fetch quotes from Notion:', e);
+}
+
 const first = quotes[0];
 ---
 
 <Layout title="Quotes">
   <Nav active="home" />
-  {quotes.length === 0 ? (
-    <p class="empty">No quotes yet.</p>
+  {fetchError ? (
+    <p class="status-msg">Unable to load quotes right now. Please try again later.</p>
+  ) : quotes.length === 0 ? (
+    <p class="status-msg">No quotes yet.</p>
   ) : (
     <>
       <QuoteDisplay quote={first} />
@@ -21,14 +32,7 @@ const first = quotes[0];
   )}
 </Layout>
 
-<script define:vars={{ quotes }}>
-  function formatMonthYear(dateStr) {
-    if (!dateStr) return '';
-    const [year, month] = dateStr.split('-');
-    const d = new Date(Number(year), Number(month) - 1);
-    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  }
-
+<script define:vars={{ quotes }} is:inline>
   function getIndexFromHash() {
     const hash = window.location.hash.slice(1);
     const n = parseInt(hash, 10);
@@ -40,51 +44,62 @@ const first = quotes[0];
     document.getElementById('quote-text').textContent = q.text;
     document.getElementById('quote-author').textContent = q.author;
     const dateEl = document.getElementById('quote-date');
-    if (dateEl) dateEl.textContent = formatMonthYear(q.date);
+    if (dateEl) {
+      if (q.dateFormatted) {
+        dateEl.textContent = q.dateFormatted;
+        dateEl.style.display = '';
+      } else {
+        dateEl.textContent = '';
+        dateEl.style.display = 'none';
+      }
+    }
     document.getElementById('quote-display').dataset.index = String(index);
     window.location.replace('#' + index);
   }
 
-  let current = getIndexFromHash();
-  // Sync display to hash on load (in case URL was shared)
-  if (current !== 0) showQuote(current);
+  // Guard: nothing to wire up if the collection is empty
+  const btnPrev = document.getElementById('btn-prev');
+  if (btnPrev) {
+    let current = getIndexFromHash();
+    if (current !== 0) showQuote(current);
 
-  document.getElementById('btn-prev').addEventListener('click', () => {
-    current = (current - 1 + quotes.length) % quotes.length;
-    showQuote(current);
-  });
-
-  document.getElementById('btn-next').addEventListener('click', () => {
-    current = (current + 1) % quotes.length;
-    showQuote(current);
-  });
-
-  document.getElementById('btn-random').addEventListener('click', () => {
-    let next;
-    do { next = Math.floor(Math.random() * quotes.length); } while (next === current && quotes.length > 1);
-    current = next;
-    showQuote(current);
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-    if (e.key === 'ArrowLeft') {
+    btnPrev.addEventListener('click', () => {
       current = (current - 1 + quotes.length) % quotes.length;
       showQuote(current);
-    } else if (e.key === 'ArrowRight') {
+    });
+
+    document.getElementById('btn-next').addEventListener('click', () => {
       current = (current + 1) % quotes.length;
       showQuote(current);
-    } else if (e.key === 'r' || e.key === 'R') {
+    });
+
+    document.getElementById('btn-random').addEventListener('click', () => {
       let next;
       do { next = Math.floor(Math.random() * quotes.length); } while (next === current && quotes.length > 1);
       current = next;
       showQuote(current);
-    }
-  });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'ArrowLeft') {
+        current = (current - 1 + quotes.length) % quotes.length;
+        showQuote(current);
+      } else if (e.key === 'ArrowRight') {
+        current = (current + 1) % quotes.length;
+        showQuote(current);
+      } else if (e.key === 'r' || e.key === 'R') {
+        let next;
+        do { next = Math.floor(Math.random() * quotes.length); } while (next === current && quotes.length > 1);
+        current = next;
+        showQuote(current);
+      }
+    });
+  }
 </script>
 
 <style>
-  .empty {
+  .status-msg {
     flex: 1;
     display: flex;
     align-items: center;
